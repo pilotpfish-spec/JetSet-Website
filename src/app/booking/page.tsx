@@ -1,107 +1,191 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
-import { ctaButton, colors } from "@/styles/global.css";
+import { ctaButton } from "@/styles/global.css";
+
+type Mode = "to-airport" | "from-airport" | "non-airport";
 
 declare global {
   interface Window {
     google: typeof google;
   }
-  interface HTMLInputElement {
-    _autocomplete?: google.maps.places.Autocomplete;
-  }
 }
 
+const fareTable: Record<Mode, { base: number; perMile: number }> = {
+  "to-airport": { base: 50, perMile: 3 },
+  "from-airport": { base: 55, perMile: 3.2 },
+  "non-airport": { base: 40, perMile: 2.5 },
+};
+
 export default function BookingPage() {
-  const [step, setStep] = useState(1);
-  const [tripType, setTripType] = useState<"to" | "from" | "non">("to");
+  const [step, setStep] = useState<number>(1);
+  const [mode, setMode] = useState<Mode>("to-airport");
 
+  const pickupRef = useRef<HTMLInputElement | null>(null);
+  const dropoffRef = useRef<HTMLInputElement | null>(null);
+
+  const [fare, setFare] = useState<number | null>(null);
+
+  // Autocomplete setup
   useEffect(() => {
-    if (typeof window !== "undefined" && window.google) {
-      const attachAutocomplete = (id: string) => {
-        const input = document.getElementById(id) as HTMLInputElement | null;
-        if (input && !input._autocomplete) {
-          const ac = new window.google.maps.places.Autocomplete(input, { types: ["geocode"] });
-          input._autocomplete = ac;
+    if (typeof window === "undefined" || !window.google?.maps?.places) return;
 
-          input.addEventListener("keydown", (e: KeyboardEvent) => {
-            if (e.key === "Enter" && !(ac.getPlace instanceof Function)) {
-              e.preventDefault();
-            }
-          });
-        }
-      };
-      if (tripType !== "from") attachAutocomplete("pickup");
-      if (tripType !== "to") attachAutocomplete("dropoff");
+    const opts: google.maps.places.AutocompleteOptions = { types: ["geocode"] };
+    if (pickupRef.current) new google.maps.places.Autocomplete(pickupRef.current, opts);
+    if (dropoffRef.current) new google.maps.places.Autocomplete(dropoffRef.current, opts);
+  }, [step, mode]);
+
+  // Distance Matrix fare calculation
+  const calculateFare = () => {
+    const pickup = pickupRef.current?.value ?? "";
+    const dropoff = dropoffRef.current?.value ?? "";
+
+    if (!pickup || !dropoff) {
+      setFare(null);
+      return;
     }
-  }, [step, tripType]);
+
+    const service = new window.google.maps.DistanceMatrixService();
+    service.getDistanceMatrix(
+      {
+        origins: [pickup],
+        destinations: [dropoff],
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (response, status) => {
+        if (status !== "OK" || !response?.rows[0]?.elements[0]?.distance) {
+          console.error("DistanceMatrix failed", status, response);
+          setFare(null);
+          return;
+        }
+
+        const distanceMeters = response.rows[0].elements[0].distance.value;
+        const miles = distanceMeters / 1609.34; // meters → miles
+
+        const fareInfo = fareTable[mode];
+        const total = fareInfo.base + fareInfo.perMile * miles;
+
+        setFare(Math.round(total));
+      }
+    );
+  };
 
   return (
-    <div style={{ padding: "3rem 1rem" }}>
-      <h2 style={{ fontSize: "2rem", fontWeight: 700, textAlign: "center", marginBottom: "2rem" }}>
-        Book Your Airport Ride
-      </h2>
+    <div className="py-12">
+      <Script
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+        strategy="beforeInteractive"
+      />
 
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: "3rem" }}>
-        {[1, 2, 3].map((num) => (
-          <div key={num} style={{ display: "flex", alignItems: "center" }}>
-            <div
-              style={{
-                width: "2.5rem",
-                height: "2.5rem",
-                borderRadius: "50%",
-                backgroundColor: step === num ? colors.yellow : "#374151",
-                color: step === num ? colors.navy : "#9ca3af",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: "bold",
-                fontSize: "1.2rem",
-              }}
-            >
-              {num}
+      <h2 className="text-4xl font-bold text-center mb-12">Book Your Ride</h2>
+
+      {/* Stepper */}
+      <div className="flex justify-center mb-12">
+        {["Address", "Quote", "Confirm"].map((label, index) => {
+          const current = index + 1;
+          return (
+            <div key={label} className="flex items-center">
+              <div
+                className={`w-10 h-10 flex items-center justify-center rounded-full font-bold ${
+                  step >= current
+                    ? "bg-yellow-400 text-navy"
+                    : "bg-gray-700 text-gray-400"
+                }`}
+              >
+                {current}
+              </div>
+              {current < 3 && <div className="w-16 h-[2px] bg-gray-500"></div>}
             </div>
-            {num < 3 && <div style={{ width: "4rem", height: "2px", background: "#6b7280" }} />}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
+      {/* Step 1: Address entry */}
       {step === 1 && (
-        <div style={{
-          maxWidth: "28rem",
-          margin: "0 auto",
-          backgroundColor: "rgba(10,25,47,0.85)",
-          borderRadius: "0.75rem",
-          padding: "2rem",
-          boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-          transition: "all 0.3s ease"
-        }}>
-          <h3 style={{ fontSize: "1.5rem", fontWeight: 600, marginBottom: "1rem" }}>Step 1: Enter Details</h3>
+        <div className="max-w-xl mx-auto bg-navy/70 backdrop-blur-sm rounded-lg p-8 shadow-xl">
+          <h3 className="text-2xl font-semibold mb-6">Step 1: Enter Address</h3>
 
-          <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginBottom: "1.5rem" }}>
-            <label><input type="radio" name="trip" checked={tripType==="to"} onChange={() => setTripType("to")} /> To Airport</label>
-            <label><input type="radio" name="trip" checked={tripType==="from"} onChange={() => setTripType("from")} /> From Airport</label>
-            <label><input type="radio" name="trip" checked={tripType==="non"} onChange={() => setTripType("non")} /> Non-Airport</label>
+          <div className="flex space-x-4 mb-6">
+            <button
+              className={`${ctaButton} ${mode === "to-airport" ? "opacity-100" : "opacity-60"}`}
+              onClick={() => setMode("to-airport")}
+            >
+              To Airport
+            </button>
+            <button
+              className={`${ctaButton} ${mode === "from-airport" ? "opacity-100" : "opacity-60"}`}
+              onClick={() => setMode("from-airport")}
+            >
+              From Airport
+            </button>
+            <button
+              className={`${ctaButton} ${mode === "non-airport" ? "opacity-100" : "opacity-60"}`}
+              onClick={() => setMode("non-airport")}
+            >
+              Non-airport
+            </button>
           </div>
 
-          {tripType !== "from" && (
-            <input id="pickup" type="text" placeholder="Pickup Address"
-              style={{ width: "100%", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem", color: "black" }} />
+          {mode !== "from-airport" && (
+            <input
+              ref={pickupRef}
+              type="text"
+              placeholder="Pickup Address"
+              className="w-full p-3 rounded mb-4 text-black"
+            />
+          )}
+          {mode !== "to-airport" && (
+            <input
+              ref={dropoffRef}
+              type="text"
+              placeholder="Drop-off Address"
+              className="w-full p-3 rounded mb-6 text-black"
+            />
           )}
 
-          {tripType !== "to" && (
-            <input id="dropoff" type="text" placeholder="Drop-off Address"
-              style={{ width: "100%", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1.5rem", color: "black" }} />
-          )}
-
-          <button className={ctaButton} onClick={() => setStep(2)}>Next</button>
+          <button
+            className={ctaButton}
+            onClick={() => {
+              calculateFare();
+              setStep(2);
+            }}
+          >
+            Next
+          </button>
         </div>
       )}
 
-      <Script
-        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
-        strategy="afterInteractive"
-      />
+      {/* Step 2: Quote */}
+      {step === 2 && (
+        <div className="max-w-xl mx-auto bg-navy/70 backdrop-blur-sm rounded-lg p-8 shadow-xl">
+          <h3 className="text-2xl font-semibold mb-4">Step 2: Get Quote</h3>
+          {fare !== null ? (
+            <p className="mb-6">
+              Estimated fare: <span className="font-bold">${fare}</span>
+            </p>
+          ) : (
+            <p className="mb-6 text-red-400">Unable to calculate fare.</p>
+          )}
+          <button className={`${ctaButton} mr-4`} onClick={() => setStep(1)}>
+            Back
+          </button>
+          <button className={ctaButton} onClick={() => setStep(3)}>
+            Next
+          </button>
+        </div>
+      )}
+
+      {/* Step 3: Confirm */}
+      {step === 3 && (
+        <div className="max-w-xl mx-auto bg-navy/70 backdrop-blur-sm rounded-lg p-8 shadow-xl">
+          <h3 className="text-2xl font-semibold mb-4">Step 3: Confirm & Book</h3>
+          <p className="mb-6">Confirm your booking and we’ll send you an email confirmation.</p>
+          <button className={`${ctaButton} mr-4`} onClick={() => setStep(2)}>
+            Back
+          </button>
+          <button className={ctaButton}>Confirm Booking</button>
+        </div>
+      )}
     </div>
   );
 }
