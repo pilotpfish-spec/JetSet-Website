@@ -3,7 +3,5 @@
 @tailwind utilities;
 
 body {
-  background-color: #0a1a33; /* JetSet Direct navy */
-  color: white;
-  font-family: system-ui, sans-serif;
+  @apply bg-red-500 text-white;
 }

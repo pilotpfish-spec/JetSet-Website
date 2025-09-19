@@ -10,13 +10,14 @@ const config: Config = {
     extend: {
       colors: {
         navy: {
-          900: "#0a1a33", // JetSet Direct navy
+          900: "#0a1a2f", // JetSet brand dark navy
         },
         yellow: {
-          600: "#facc15", // JetSet Direct yellow
-        }
-      }
-    }
+          600: "#facc15", // JetSet yellow
+          500: "#fde047",
+        },
+      },
+    },
   },
   plugins: [],
 };
