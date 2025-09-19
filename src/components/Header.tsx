@@ -12,14 +12,14 @@ export default function Header() {
         </Link>
 
         {/* Nav Links */}
-        <nav className="flex space-x-6">
+        <nav className="flex space-x-6 text-gray-700 font-medium">
           <Link href="/" className="hover:text-blue-600">Home</Link>
           <Link href="/about" className="hover:text-blue-600">About</Link>
           <Link href="/fleet" className="hover:text-blue-600">Fleet</Link>
           <Link href="/booking" className="hover:text-blue-600">Booking</Link>
           <Link href="/contact" className="hover:text-blue-600">Contact</Link>
           <Link href="/login" className="hover:text-blue-600">Login</Link>
-          <Link href="/signup" className="hover:text-blue-600 font-semibold">Sign Up</Link>
+          <Link href="/signup" className="hover:text-yellow-600 font-semibold">Sign Up</Link>
         </nav>
       </div>
     </header>
