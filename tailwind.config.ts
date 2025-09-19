@@ -10,7 +10,7 @@ const config: Config = {
     extend: {
       colors: {
         navy: {
-          900: "#0a1a2f", // JetSet brand dark navy
+          900: "#0a1a2f", // JetSet brand navy
         },
         yellow: {
           600: "#facc15", // JetSet yellow
@@ -21,5 +21,4 @@ const config: Config = {
   },
   plugins: [],
 };
-
 export default config;
