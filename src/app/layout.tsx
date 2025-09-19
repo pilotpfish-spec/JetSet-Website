@@ -15,20 +15,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {/* Header */}
         <header style={{
-          position: "fixed",
-          top: 0, left: 0,
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "1rem 2rem",
-          backgroundColor: "#0a192f",
-          backdropFilter: "blur(8px)",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
-          zIndex: 50
+          position: "fixed", top: 0, left: 0, width: "100%",
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          padding: "1rem 2rem", backgroundColor: "#0a192f",
+          backdropFilter: "blur(8px)", boxShadow: "0 2px 6px rgba(0,0,0,0.4)", zIndex: 50
         }}>
           <div>
-            <Image src="/logo.png" alt="JetSet Direct Logo" width={160} height={40} priority />
+            <Image src="/logo.png" alt="JetSet Direct Logo"
+              width={140} height={40} priority style={{ objectFit: "contain" }} />
           </div>
           <nav>
             <ul style={{ display: "flex", gap: "2rem" }}>
@@ -52,19 +46,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         {/* Footer */}
         <footer style={{
-          backgroundColor: "#0a192f",
-          backdropFilter: "blur(6px)",
-          borderTop: "1px solid #374151",
-          padding: "2rem 1rem",
-          marginTop: "2rem"
+          backgroundColor: "#0a192f", backdropFilter: "blur(6px)",
+          borderTop: "1px solid #374151", padding: "2rem 1rem", marginTop: "2rem"
         }}>
           <div style={{
-            maxWidth: "1200px",
-            margin: "0 auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: "1.5rem",
-            alignItems: "center"
+            maxWidth: "1200px", margin: "0 auto",
+            display: "flex", flexDirection: "column", gap: "1.5rem", alignItems: "center"
           }}>
             <Image src="/logo.png" alt="JetSet Direct Logo" width={140} height={35} />
             <nav>
@@ -85,4 +72,3 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
-

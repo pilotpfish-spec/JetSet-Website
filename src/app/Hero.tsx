@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ctaButton } from "@/styles/global.css";
 
 export default function Hero() {
@@ -19,30 +20,20 @@ export default function Hero() {
   return (
     <section
       style={{
-        position: "relative",
-        height: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        textAlign: "center",
-        color: "white",
+        position: "relative", height: "100vh", display: "flex",
+        alignItems: "center", justifyContent: "center", textAlign: "center",
         backgroundImage: heroImage ? `url(${heroImage})` : "none",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
+        backgroundSize: "cover", backgroundPosition: "center"
       }}
     >
-      {/* Overlay */}
       <div style={{
-        position: "absolute",
-        inset: 0,
-        backgroundColor: "rgba(0,0,0,0.6)",
-        backdropFilter: "blur(6px)"
+        position: "absolute", inset: 0,
+        backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)"
       }}></div>
 
-      {/* Content */}
       <div style={{ position: "relative", zIndex: 10, padding: "2rem" }}>
-        <h1 style={{ fontSize: "3.5rem", fontWeight: 800, marginBottom: "1rem" }}>
-          JETSET DIRECT
+        <h1 style={{ marginBottom: "1rem" }}>
+          <Image src="/logo.png" alt="JetSet Direct" width={200} height={80} priority />
         </h1>
         <p style={{ fontSize: "1.25rem", marginBottom: "1.5rem", fontStyle: "italic", color: "#e5e7eb" }}>
           Ground Service Elevated. The Reason We’re Taking Off.
@@ -54,4 +45,3 @@ export default function Hero() {
     </section>
   );
 }
-
