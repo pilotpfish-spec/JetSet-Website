@@ -1,4 +1,6 @@
 "use client";
+
+import Image from 'next/image';
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
@@ -38,7 +40,7 @@ export default function LoginPage() {
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-xl shadow mt-10">
       <div className="flex justify-center mb-4">
-        <img src="/logo.png" alt="JetSet Direct" className="h-8" />
+        <Image src="/logo.png" alt="JetSet Direct" width={120} height={32} className="h-8 w-auto" />
       </div>
       <h1 className="text-2xl font-semibold mb-4 text-[#0F1F39]">Log In</h1>
 

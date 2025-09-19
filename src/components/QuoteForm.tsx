@@ -4,15 +4,29 @@ import { useLoadScript, Autocomplete } from "@react-google-maps/api";
 import { useRef, useState } from "react";
 import { AIRPORTS } from "@/lib/airports";
 
-type Mode = "TO_AIRPORT" | "FROM_AIRPORT" | "POINT_TO_POINT";
-
 const LIBS: ("places")[] = ["places"];
 
-function getInputValue(id: string) {
+type Mode = "TO_AIRPORT" | "FROM_AIRPORT" | "POINT_TO_POINT";
+
+interface Quote {
+  distanceMiles: number;
+  durationMinutes: number;
+  price?: number;
+  totalCents: number;
+  breakdown: {
+    baseCents: number;
+    distanceCents: number;
+    timeCents: number;
+    airportFeeCents?: number;
+    waitCents?: number;
+  };
+}
+
+// ✅ Restore lost helper
+function getInputValue(id: string): string {
   const el = document.getElementById(id) as HTMLInputElement | null;
   return (el?.value ?? "").trim();
 }
-
 export default function QuoteForm() {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
@@ -32,7 +46,7 @@ export default function QuoteForm() {
   const showOrigin = mode !== "FROM_AIRPORT"; // need street for origin unless From Airport
   const showDest   = mode !== "TO_AIRPORT";   // need street for dest unless To Airport
 
-  const [quote, setQuote] = useState<any>(null);
+  const [quote, setQuote] = useState<Quote | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
@@ -261,3 +275,9 @@ export default function QuoteForm() {
     </div>
   );
 }
+
+
+
+
+
+

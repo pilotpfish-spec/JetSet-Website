@@ -52,7 +52,7 @@ export default function SignupPage() {
         redirect: true,
         callbackUrl: "/booking"
       });
-    } catch (err) {
+    }catch {
       setError("Unexpected error. Please try again.");
       setSubmitting(false);
     }

@@ -1,3 +1,4 @@
+import type { User } from "next-auth";
 import { type NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
@@ -12,7 +13,7 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials) {
+      async authorize(credentials): Promise<User | null> {
         const email = (credentials?.email ?? "").toString().trim().toLowerCase();
         const password = (credentials?.password ?? "").toString();
 
@@ -25,10 +26,17 @@ export const authOptions: NextAuthOptions = {
         const ok = await verifyPassword(password, user.hashedPassword);
         if (!ok) return null;
 
-        return { id: user.id, email: user.email!, name: user.name ?? undefined };
+        return { id: String(user.id), email: user.email!, name: user.name ?? undefined };
       }
     })
   ],
   pages: { signIn: "/admin/login" }
 };
 export default authOptions;
+
+
+
+
+
+
+
