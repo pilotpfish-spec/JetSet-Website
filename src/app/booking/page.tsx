@@ -1,82 +1,182 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import Script from "next/script";
 import { ctaButton } from "@/styles/global.css";
 
-type RideType = "toAirport" | "fromAirport" | "nonAirport";
-
-// Tell TypeScript about Google Maps API
 declare global {
   interface Window {
     google: typeof google;
   }
 }
 
-const airports = [
-  "Dallas/Fort Worth International Airport (DFW)",
-  "Dallas Love Field (DAL)",
-  "Fort Worth Meacham International (FTW)",
-  "Dallas Executive Airport (RBD)",
-  "Arlington Municipal Airport (GKY)"
+type RideType = "to-airport" | "from-airport" | "non-airport";
+
+const AIRPORTS = [
+  { code: "DFW", name: "Dallas/Fort Worth International Airport (DFW)" },
+  { code: "DAL", name: "Dallas Love Field (DAL)" },
+  { code: "ACT", name: "Waco Regional Airport (ACT)" },
+  { code: "ABI", name: "Abilene Regional Airport (ABI)" },
+  { code: "LAW", name: "Lawton–Fort Sill Regional Airport (LAW)" },
 ];
 
 export default function BookingPage() {
-  const [step, setStep] = useState(1);
-  const [rideType, setRideType] = useState<RideType>("toAirport");
-  const pickupRef = useRef<HTMLInputElement | null>(null);
-  const dropoffRef = useRef<HTMLInputElement | null>(null);
+  const [step, setStep] = useState<number>(1);
+  const [rideType, setRideType] = useState<RideType>("to-airport");
+  const [pickup, setPickup] = useState<string>("");
+  const [dropoff, setDropoff] = useState<string>("");
+  const [airport, setAirport] = useState<string>("");
+  const [fare, setFare] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.google?.maps?.places) {
-      const options: google.maps.places.AutocompleteOptions = { types: ["geocode"] };
-      if (pickupRef.current) new google.maps.places.Autocomplete(pickupRef.current, options);
-      if (dropoffRef.current) new google.maps.places.Autocomplete(dropoffRef.current, options);
+  const initAutocomplete = (id: string) => {
+    const input = document.getElementById(id) as HTMLInputElement;
+    if (!input) return;
+    const autocomplete = new window.google.maps.places.Autocomplete(input, {
+      fields: ["formatted_address"],
+    });
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+      if (id === "pickup") setPickup(place.formatted_address || "");
+      if (id === "dropoff") setDropoff(place.formatted_address || "");
+    });
+  };
+
+  const handleNext = () => {
+    if (rideType === "to-airport" && (!pickup || !airport)) {
+      return alert("Please enter a valid pickup and select an airport.");
     }
-  }, [rideType]);
-
-  const renderStep1 = () => (
-    <div style={{
-      background: "#0a192f", padding: "2rem", borderRadius: "1rem",
-      boxShadow: "0 6px 12px rgba(0,0,0,0.3)", maxWidth: "500px", margin: "0 auto"
-    }}>
-      <h2 style={{ marginBottom: "1rem" }}>Step 1: Enter Details</h2>
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
-        <label><input type="radio" checked={rideType==="toAirport"} onChange={() => setRideType("toAirport")} /> To Airport</label>
-        <label><input type="radio" checked={rideType==="fromAirport"} onChange={() => setRideType("fromAirport")} /> From Airport</label>
-        <label><input type="radio" checked={rideType==="nonAirport"} onChange={() => setRideType("nonAirport")} /> Non-Airport</label>
-      </div>
-
-      {rideType !== "fromAirport" && (
-        <input ref={pickupRef} placeholder="Pickup Address" style={{ width: "100%", padding: "0.75rem", marginBottom: "1rem" }} required />
-      )}
-
-      {rideType !== "toAirport" && (
-        <input ref={dropoffRef} placeholder="Drop-off Address" style={{ width: "100%", padding: "0.75rem", marginBottom: "1rem" }} required />
-      )}
-
-      <select style={{ width: "100%", padding: "0.75rem", marginBottom: "1rem" }} required>
-        <option value="">Select Airport</option>
-        {airports.map((airport) => <option key={airport}>{airport}</option>)}
-      </select>
-
-      <button className={ctaButton} onClick={() => setStep(2)}>Next</button>
-    </div>
-  );
+    if (rideType === "from-airport" && (!dropoff || !airport)) {
+      return alert("Please enter a valid drop-off and select an airport.");
+    }
+    if (rideType === "non-airport" && (!pickup || !dropoff)) {
+      return alert("Please enter valid pickup and drop-off addresses.");
+    }
+    setFare(95); // TODO: replace with real fare calculation
+    setStep(2);
+  };
 
   return (
-    <>
-      <Script src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`} strategy="afterInteractive" />
-      <h1 style={{ textAlign: "center", margin: "2rem 0" }}>Book Your Airport Ride</h1>
-      <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginBottom: "2rem" }}>
-        {[1,2,3].map((s) => (
-          <div key={s} style={{
-            width: "40px", height: "40px", borderRadius: "50%",
-            backgroundColor: s===step ? "#facc15" : "#374151",
-            display: "flex", alignItems: "center", justifyContent: "center", color: "black"
-          }}>{s}</div>
+    <div className="py-12">
+      <h2 className="text-4xl font-bold text-center mb-12">Book Your Airport Ride</h2>
+
+      {/* Stepper */}
+      <div className="flex justify-center mb-12">
+        {[1, 2, 3].map((s) => (
+          <div key={s} className="flex items-center">
+            <div className={`w-10 h-10 flex items-center justify-center rounded-full font-bold ${
+              step >= s ? "bg-yellow-400 text-navy" : "bg-gray-700 text-gray-400"
+            }`}>
+              {s}
+            </div>
+            {s < 3 && <div className="w-16 h-[2px] bg-gray-500"></div>}
+          </div>
         ))}
       </div>
-      {step===1 && renderStep1()}
-    </>
+
+      {/* Steps */}
+      <div className="max-w-xl mx-auto bg-navy/70 backdrop-blur-sm rounded-lg p-8 shadow-xl">
+        {step === 1 && (
+          <div>
+            <h3 className="text-2xl font-semibold mb-4">Step 1: Enter Details</h3>
+
+            {/* Ride type */}
+            <div className="flex gap-6 mb-6">
+              <label>
+                <input type="radio" name="rideType" value="to-airport"
+                  checked={rideType === "to-airport"}
+                  onChange={() => setRideType("to-airport")} />
+                <span className="ml-2">To Airport</span>
+              </label>
+              <label>
+                <input type="radio" name="rideType" value="from-airport"
+                  checked={rideType === "from-airport"}
+                  onChange={() => setRideType("from-airport")} />
+                <span className="ml-2">From Airport</span>
+              </label>
+              <label>
+                <input type="radio" name="rideType" value="non-airport"
+                  checked={rideType === "non-airport"}
+                  onChange={() => setRideType("non-airport")} />
+                <span className="ml-2">Non-Airport</span>
+              </label>
+            </div>
+
+            {/* Address / Airport fields */}
+            {rideType === "to-airport" && (
+              <>
+                <input id="pickup" type="text" placeholder="Pickup Address"
+                  defaultValue={pickup}
+                  className="w-full p-3 rounded mb-4 text-black" />
+                <select className="w-full p-3 rounded mb-6 text-black"
+                  value={airport}
+                  onChange={(e) => setAirport(e.target.value)}>
+                  <option value="">Select Airport</option>
+                  {AIRPORTS.map((a) => (
+                    <option key={a.code} value={a.name}>{a.name}</option>
+                  ))}
+                </select>
+              </>
+            )}
+
+            {rideType === "from-airport" && (
+              <>
+                <select className="w-full p-3 rounded mb-4 text-black"
+                  value={airport}
+                  onChange={(e) => setAirport(e.target.value)}>
+                  <option value="">Select Airport</option>
+                  {AIRPORTS.map((a) => (
+                    <option key={a.code} value={a.name}>{a.name}</option>
+                  ))}
+                </select>
+                <input id="dropoff" type="text" placeholder="Drop-off Address"
+                  defaultValue={dropoff}
+                  className="w-full p-3 rounded mb-6 text-black" />
+              </>
+            )}
+
+            {rideType === "non-airport" && (
+              <>
+                <input id="pickup" type="text" placeholder="Pickup Address"
+                  defaultValue={pickup}
+                  className="w-full p-3 rounded mb-4 text-black" />
+                <input id="dropoff" type="text" placeholder="Drop-off Address"
+                  defaultValue={dropoff}
+                  className="w-full p-3 rounded mb-6 text-black" />
+              </>
+            )}
+
+            <button className={ctaButton} onClick={handleNext}>Next</button>
+          </div>
+        )}
+
+        {step === 2 && fare && (
+          <div>
+            <h3 className="text-2xl font-semibold mb-4">Step 2: Get Quote</h3>
+            <p className="mb-6">Estimated fare: <span className="font-bold">${fare}</span></p>
+            <button className={ctaButton} onClick={() => setStep(3)}>Proceed to Booking</button>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div>
+            <h3 className="text-2xl font-semibold mb-4">Step 3: Confirm & Book</h3>
+            <p className="mb-6">
+              {rideType === "to-airport" && `From ${pickup} → ${airport}`}<br />
+              {rideType === "from-airport" && `${airport} → ${dropoff}`}<br />
+              {rideType === "non-airport" && `${pickup} → ${dropoff}`}
+            </p>
+            <button className={ctaButton}>Confirm Booking</button>
+          </div>
+        )}
+      </div>
+
+      {/* Google Maps Places */}
+      <Script src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+        onLoad={() => { initAutocomplete("pickup"); initAutocomplete("dropoff"); }
+}/>
+    </div>
   );
 }
+
+
+
+
