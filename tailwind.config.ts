@@ -10,10 +10,10 @@ const config: Config = {
     extend: {
       colors: {
         navy: {
-          900: "#0a1a33", // JetSet Direct navy background
+          900: "#0a1a33", // JetSet Direct navy
         },
         yellow: {
-          600: "#facc15", // highlight for buttons/hover
+          600: "#facc15", // JetSet Direct yellow
         }
       }
     }
