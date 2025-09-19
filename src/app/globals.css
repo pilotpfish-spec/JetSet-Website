@@ -2,6 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-navy-900 text-white;
+html, body {
+  @apply bg-navy text-white antialiased;
+}
+
+@layer components {
+  .cta-btn {
+    @apply px-8 py-4 bg-gold text-navy font-bold rounded-lg shadow-lg hover:bg-yellow-300 transition transform hover:scale-105;
+  }
+
+  .nav-link {
+    @apply relative text-white hover:text-gold transition;
+  }
+
+  .nav-link::after {
+    content: "";
+    @apply absolute left-0 bottom-[-4px] w-0 h-[2px] bg-gold transition-all duration-300;
+  }
+
+  .nav-link:hover::after {
+    @apply w-full;
+  }
+
+  .footer-link {
+    @apply text-gray-300 hover:text-gold transition;
+  }
 }

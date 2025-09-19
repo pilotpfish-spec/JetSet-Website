@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* JetSet Direct exclusive palette */
+:root {
+  --color-navy: #0a192f;
+  --color-gold: #facc15;
+  --color-gray-light: #e5e7eb;
+  --color-overlay: rgba(10,25,47,0.75);
+}
+
+/* Smooth scroll, luxury font styling */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Geist", sans-serif;
+  background-color: var(--color-navy);
+  color: var(--color-gray-light);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Luxury heading style */
+h1, h2, h3, h4 {
+  font-family: "Geist", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Nav hover */
+nav a {
+  transition: color 0.3s ease;
+}
+nav a:hover {
+  color: var(--color-gold);
+}
+
+/* Hero overlay readable layer */
+.hero-overlay {
+  background: var(--color-overlay);
+  backdrop-filter: blur(6px);
+}
