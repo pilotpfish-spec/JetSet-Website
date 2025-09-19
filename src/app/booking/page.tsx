@@ -16,8 +16,8 @@ const AIRPORTS = [
 export default function BookingPage() {
   const [step, setStep] = useState(1);
   const [rideType, setRideType] = useState<RideType>("to-airport");
-  const [pickup, setPickup] = useState("");
-  const [dropoff, setDropoff] = useState("");
+  const [pickup, setPickup] = useState<string>("");
+  const [dropoff, setDropoff] = useState<string>("");
   const [airport, setAirport] = useState("");
 
   const pickupRef = useRef<HTMLInputElement>(null);
@@ -114,3 +114,9 @@ export default function BookingPage() {
     </div>
   );
 }
+
+
+
+
+
+

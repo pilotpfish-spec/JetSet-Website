@@ -1,9 +1,9 @@
 import "@/styles/global.css";
 import Image from "next/image";
 import Link from "next/link";
+import Script from "next/script";
 import Hero from "./Hero";
 import { navLink, footerLink } from "@/styles/global.css";
-
 export const metadata = {
   title: "JetSet Direct",
   description: "Ground Service Elevated. The Reason We’re Taking Off.",
@@ -68,7 +68,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </p>
           </div>
         </footer>
-      </body>
+          <Script
+    src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+    strategy="beforeInteractive"
+  />
+</body>
     </html>
   );
 }
+
+
+
+
+
+
+
+
+
+
