@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css";
-import { colors } from "./global.css.ts";
+import { colors } from "./global.css";
 
 export const container = style({
   maxWidth: 1100,
