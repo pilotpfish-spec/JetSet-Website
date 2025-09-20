@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Persist booking
-    const booking = /* TS-WAIVE-PRISMA: schema vs API fields; revisit after schema sync */ await prisma.booking.create({
+    const booking = await prisma.booking.create({
       data: {
         customerName,
         customerEmail: customerEmail ?? null,
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         pickupAt: pickupAt ? new Date(pickupAt) : null,
         notes: notes ?? null,
         status: "pending",
-      } as any,
+      },
     });
 
     // Fail-closed email gate
@@ -126,4 +126,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Booking failed" }, { status: 500 });
   }
 }
-

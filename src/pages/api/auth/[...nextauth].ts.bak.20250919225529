@@ -38,10 +38,8 @@ export const authOptions = {
           where: { email: credentials.email },
         })
         if (!user) return null
-        const pwd = typeof credentials?.password === "string" ? credentials.password : "";
-const hash = user?.hashedPassword ?? "";
-if (!pwd || !hash) return null;
-const isValid = await bcrypt.compare(pwd, hash);return isValid ? { id: String(user.id), email: user.email, name: user.name ?? null } : null
+        const isValid = await bcrypt.compare(credentials.password, user.hashedPassword)
+        return isValid ? { id: String(user.id), email: user.email, name: user.name ?? null } : null
       }
     })
   ],
@@ -50,8 +48,6 @@ const isValid = await bcrypt.compare(pwd, hash);return isValid ? { id: String(us
 }
 
 export default NextAuth(authOptions)
-
-
 
 
 
