@@ -1,27 +1,28 @@
 import Link from "next/link";
-import * as ui from "../components/ui.css";
+import { container, hero, heroTitle, heroSub, heroActions, features, featureCard, outlineButton } from "@/styles/ui.css";
+import { ctaButton } from "@/styles/global.css";
 
 export default function Home() {
   return (
-    <div style={{display:"grid", gap:24}}>
-      <section className={ui.card} style={{background:"#0f172a", color:"#fff"}}>
-        <h1 style={{fontSize:"28px", marginBottom:8}}>Private Car Service · On-time Airport Transfers</h1>
-        <p style={{opacity:.9}}>Transparent pricing, pro drivers, and seamless booking.</p>
-        <div style={{display:"flex", gap:12, marginTop:16}}>
-          <Link href="/booking" className={ui.buttonPrimary} style={{textDecoration:"none"}}>Get Quote</Link>
-          <Link href="/booking" className={ui.buttonSecondary} style={{textDecoration:"none"}}>Book Now</Link>
+    <div className={container}>
+      <section className={hero}>
+        <h1 className={heroTitle}>Private Car Service — DFW Airport Transfers</h1>
+        <p className={heroSub}>Transparent pricing, professional drivers, easy 1-2-3 booking.</p>
+        <div className={heroActions}>
+          <Link className={ctaButton} href="/booking">Get Quote</Link>
+          <Link className={outlineButton} href="/booking">Book Now</Link>
         </div>
       </section>
 
-      <section className={ui.grid2}>
+      <section className={features}>
         {[
           ["On-Time Pickup","We track flights & traffic."],
           ["Transparent Pricing","No surprises. Tip optional."],
           ["Pro Vehicles","Sedans, SUVs, and vans."],
         ].map(([t,s]) => (
-          <div key={t} className={ui.card}>
-            <div style={{fontWeight:600}}>{t}</div>
-            <div style={{color:"#475569", marginTop:6}}>{s}</div>
+          <div key={t} className={featureCard}>
+            <div style={{fontWeight:700}}>{t}</div>
+            <div style={{marginTop:6, color:"#334155"}}>{s}</div>
           </div>
         ))}
       </section>

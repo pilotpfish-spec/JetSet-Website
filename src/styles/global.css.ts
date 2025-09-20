@@ -1,15 +1,44 @@
-import { globalStyle } from "@vanilla-extract/css";
-import { vars } from "./theme.css";
+import { globalStyle, style } from "@vanilla-extract/css";
 
+export const colors = {
+  bg: "#0b0f1a",
+  surface: "#ffffff",
+  text: "#0f172a",
+  muted: "#64748b",
+  primary: "#111827",
+  accent: "#2563eb",
+  ring: "rgba(37,99,235,0.35)"
+};
+
+// Reset-ish + base
 globalStyle("html,body,#__next", { height: "100%" });
 globalStyle("body", {
   margin: 0,
-  background: vars.color.bg,
-  color: vars.color.text,
-  fontFamily: vars.font.body
+  backgroundColor: colors.bg,
+  color: colors.surface,
+  fontFamily:
+    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
 });
-globalStyle("a", { color: vars.color.link, textDecoration: "none" });
-globalStyle("a:hover", { textDecoration: "underline" });
-globalStyle("h1", { fontSize: "2rem", lineHeight: "1.2", margin: "0 0 8px" });
-globalStyle("h2", { fontSize: "1.5rem", lineHeight: "1.25", margin: "24px 0 8px" });
-globalStyle("input,select,button,textarea", { fontFamily: vars.font.body, fontSize: "1rem" });
+
+globalStyle("a", { color: "inherit", textDecoration: "none" });
+globalStyle("*", { boxSizing: "border-box" });
+
+// Reusable CTA button
+export const ctaButton = style({
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 12,
+  padding: "10px 16px",
+  fontWeight: 600,
+  border: "1px solid transparent",
+  backgroundColor: colors.accent,
+  color: "#fff",
+  cursor: "pointer",
+  transition: "transform .06s ease, box-shadow .06s ease",
+  selectors: {
+    "&:hover": { transform: "translateY(-1px)" },
+    "&:focus-visible": { outline: "none", boxShadow: `0 0 0 3px ${colors.ring}` },
+    "&:disabled": { opacity: 0.6, cursor: "not-allowed" },
+  },
+});

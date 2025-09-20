@@ -36,14 +36,6 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "__archive",
-    "__archive/**/*",
-    "**/*.bak.*",
-    "**/*.backup.*",
-    "**/*.wip.*",
-    "**/*.old.*",
-    "**/*.draft.*",
-    "**/*.temp.*"
+    "node_modules"
   ]
 }
