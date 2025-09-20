@@ -1,5 +1,5 @@
 {
-  "compilerOptions": {\n    "allowImportingTsExtensions": true,
+  "compilerOptions": {
     "target": "ES2017",
     "lib": [
       "dom",
