@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css";
-import { vars } from "../styles/theme.css.ts";
+import { vars } from "../styles/theme.css";
 
 export const container = style({
   maxWidth: "960px",
