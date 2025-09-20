@@ -17,7 +17,7 @@ model User {
   image          String?
   accounts       Account[]
   sessions       Session[]
-  bookings       Booking[]   // ✅ added relation
+  bookings       Booking[] // ✅ added relation
 }
 
 model Account {
