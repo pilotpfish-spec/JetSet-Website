@@ -1,10 +1,11 @@
 const { createVanillaExtractPlugin } = require("@vanilla-extract/next-plugin");
-
 const withVanillaExtract = createVanillaExtractPlugin();
 
-module.exports = withVanillaExtract({
+const baseConfig = {
   reactStrictMode: true,
-});
-/* build-safety: appended by script */
-module.exports.typescript = { ...(module.exports.typescript || {}), ignoreBuildErrors: true };
-module.exports.eslint = { ...(module.exports.eslint || {}), ignoreDuringBuilds: true };
+  // Keep your “ship now” knobs
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
+};
+
+module.exports = withVanillaExtract(baseConfig);
