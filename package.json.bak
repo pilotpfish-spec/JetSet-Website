@@ -19,7 +19,7 @@
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "form-data": "^4.0.4",
-    "jose": "^6.1.0",
+    "jsonwebtoken": "^9.0.2",
     "mailgun.js": "^12.0.3",
     "next": "15.5.3",
     "next-auth": "^4.24.7",
@@ -32,6 +32,7 @@
     "@eslint/eslintrc": "^3",
     "@types/bcrypt": "^6.0.0",
     "@types/google.maps": "^3.58.1",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -40,9 +41,9 @@
     "cross-env": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
+    "eslint-plugin-next": "^0.0.0",
     "prisma": "^6.16.2",
     "tailwindcss-cli": "^0.1.2",
     "typescript": "^5"
-  },
-  "type": "module"
+  }
 }

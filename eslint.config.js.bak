@@ -1,0 +1,15 @@
+import next from "eslint-plugin-next";
+
+export default [
+  // Ignore backup/stash paths and artifacts
+  { ignores: ["**/*.bak","**/*.backup.*","**/backup_stash/**","**/recovery/**","C:/_website_stash/**"] },
+
+  // Next.js plugin (recommended)
+  {
+    files: ["**/*.{ts,tsx,js,jsx}"],
+    plugins: { "@next/next": next },
+    rules: {
+      ...next.configs.recommended.rules,
+    },
+  },
+];

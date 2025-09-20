@@ -1,0 +1,51 @@
+import * as React from "react";
+
+type Props = {
+  value?: string;
+  onChange?: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+  id?: string;
+  name?: string;
+  disabled?: boolean;
+};
+
+/**
+ * Temporary stub for GooglePlacesInput.
+ * - Keeps the same API surface (value/onChange/placeholder/className).
+ * - You can swap in real Places Autocomplete later without breaking callers.
+ */
+export default function GooglePlacesInput({
+  value = "",
+  onChange,
+  placeholder = "Enter an address",
+  className = "",
+  id,
+  name,
+  disabled,
+}: Props) {
+  const [val, setVal] = React.useState(value);
+
+  React.useEffect(() => {
+    setVal(value ?? "");
+  }, [value]);
+
+  return (
+    <input
+      id={id}
+      name={name}
+      className={className || "w-full rounded-xl border px-3 py-2"}
+      type="text"
+      inputMode="text"
+      autoComplete="street-address"
+      placeholder={placeholder}
+      value={val}
+      onChange={(e) => {
+        const v = e.currentTarget.value;
+        setVal(v);
+        onChange?.(v);
+      }}
+      disabled={disabled}
+    />
+  );
+}

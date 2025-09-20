@@ -1,0 +1,245 @@
+"use client";
+
+import { useState } from "react";
+import GooglePlacesInput from "@/components/GooglePlacesInput";
+
+type Vehicle = { id: string; name: string; pax: number; base: number };
+const VEHICLES: Vehicle[] = [
+  { id: "sedan", name: "Sedan", pax: 3, base: 95 },
+  { id: "suv", name: "SUV", pax: 6, base: 145 },
+  { id: "sprinter", name: "Sprinter", pax: 12, base: 295 },
+];
+
+/**
+ * EDIT THIS LIST to your local airports.
+ * Keep code + label. The label is what shows in the dropdown.
+ */
+const AIRPORTS = [
+  { code: "JFK", label: "JFK — John F. Kennedy Intl" },
+  { code: "LGA", label: "LGA — LaGuardia" },
+  { code: "EWR", label: "EWR — Newark Liberty Intl" },
+  // { code: "HOM", label: "YOUR — Add your local airport(s)" },
+] as const;
+
+type Direction = "TO_AIRPORT" | "FROM_AIRPORT";
+
+export default function BookingPage() {
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+
+  // Direction + fields
+  const [direction, setDirection] = useState<Direction>("TO_AIRPORT");
+  const [pickup, setPickup] = useState("");   // used only when TO_AIRPORT
+  const [dropoff, setDropoff] = useState(""); // used only when FROM_AIRPORT
+  const [airport, setAirport] = useState(AIRPORTS[0]?.code ?? "");
+  const [when, setWhen] = useState("");
+
+  // Vehicle + submit
+  const [vehicleId, setVehicleId] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const chosen = VEHICLES.find(v => v.id === vehicleId) || null;
+
+  const nextFrom1 =
+    direction === "TO_AIRPORT"
+      ? Boolean(pickup.trim() && airport && when.trim())
+      : Boolean(airport && dropoff.trim() && when.trim());
+
+  const nextFrom2 = Boolean(vehicleId);
+
+  async function submitBooking() {
+    setLoading(true); setErr(null); setMsg(null);
+    try {
+      // Adjust endpoint if you want a different route than /api/quote
+      const payload =
+        direction === "TO_AIRPORT"
+          ? { direction, pickup, airport, when, vehicleId }
+          : { direction, dropoff, airport, when, vehicleId };
+
+      const res = await fetch("/api/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Unable to submit booking");
+      setMsg(data?.message || "Request received! We’ll confirm shortly.");
+    } catch (e: any) {
+      setErr(e?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section style={{ maxWidth: 720, margin: "0 auto" }}>
+      <h1>Book a Ride</h1>
+
+      <div style={{ display: "flex", gap: 12, margin: "12px 0 24px" }}>
+        <StepDot n={1} current={step} label="Details" />
+        <StepDot n={2} current={step} label="Vehicle" />
+        <StepDot n={3} current={step} label="Review" />
+      </div>
+
+      {step === 1 && (
+        <div style={{ display: "grid", gap: 12 }}>
+          {/* Direction toggle */}
+          <fieldset style={{ display: "flex", gap: 16, border: "1px solid #ddd", borderRadius: 8, padding: 12 }}>
+            <legend>Trip Direction</legend>
+            <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input
+                type="radio"
+                name="direction"
+                value="TO_AIRPORT"
+                checked={direction === "TO_AIRPORT"}
+                onChange={() => { setDirection("TO_AIRPORT"); setDropoff(""); }}
+              />
+              To Airport
+            </label>
+            <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input
+                type="radio"
+                name="direction"
+                value="FROM_AIRPORT"
+                checked={direction === "FROM_AIRPORT"}
+                onChange={() => { setDirection("FROM_AIRPORT"); setPickup(""); }}
+              />
+              From Airport
+            </label>
+          </fieldset>
+
+          {/* Conditional fields */}
+          {direction === "TO_AIRPORT" ? (
+            <>
+              <label>
+                Pickup
+                <GooglePlacesInput value={pickup} onChange={setPickup} required />
+              </label>
+              {/* NO dropoff when going to airport */}
+            </>
+          ) : (
+            <>
+              {/* NO pickup when coming from airport */}
+              <label>
+                Dropoff
+                <GooglePlacesInput value={dropoff} onChange={setDropoff} required />
+              </label>
+            </>
+          )}
+
+          <label>
+            Airport
+            <select
+              value={airport}
+              onChange={(e) => setAirport(e.target.value)}
+              required
+              style={{ width: "100%", padding: 8 }}
+            >
+              {AIRPORTS.map(a => (
+                <option key={a.code} value={a.code}>{a.label}</option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            When
+            <input
+              type="datetime-local"
+              value={when}
+              onChange={(e) => setWhen(e.target.value)}
+              required
+              style={{ width: "100%", padding: 8 }}
+            />
+          </label>
+
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <button onClick={() => setStep(2)} disabled={!nextFrom1}>
+              Next: Choose Vehicle
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div style={{ display: "grid", gap: 12 }}>
+          <div style={{ display: "grid", gap: 8 }}>
+            {VEHICLES.map(v => (
+              <label key={v.id} style={{
+                display: "flex",
+                justifyContent: "space-between",
+                border: "1px solid #ddd",
+                borderRadius: 8,
+                padding: "10px 12px",
+                cursor: "pointer",
+                background: v.id === vehicleId ? "#eef6ff" : "#fff",
+              }}>
+                <span>{v.name} • up to {v.pax} pax</span>
+                <span>${v.base.toFixed(0)}+</span>
+                <input
+                  type="radio"
+                  name="vehicle"
+                  value={v.id}
+                  checked={vehicleId === v.id}
+                  onChange={() => setVehicleId(v.id)}
+                  style={{ display: "none" }}
+                />
+              </label>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <button onClick={() => setStep(1)}>Back</button>
+            <button onClick={() => setStep(3)} disabled={!nextFrom2}>
+              Next: Review
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div style={{ display: "grid", gap: 12 }}>
+          <h2>Review</h2>
+          <ul>
+            <li><strong>Direction:</strong> {direction === "TO_AIRPORT" ? "To Airport" : "From Airport"}</li>
+            {direction === "TO_AIRPORT" ? (
+              <li><strong>Pickup:</strong> {pickup}</li>
+            ) : (
+              <li><strong>Dropoff:</strong> {dropoff}</li>
+            )}
+            <li><strong>Airport:</strong> {airport}</li>
+            <li><strong>When:</strong> {when}</li>
+            <li><strong>Vehicle:</strong> {chosen ? chosen.name : "-"}</li>
+          </ul>
+
+          {err && <p style={{ color: "crimson" }}>{err}</p>}
+          {msg && <p style={{ color: "green" }}>{msg}</p>}
+
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <button onClick={() => setStep(2)}>Back</button>
+            <button onClick={submitBooking} disabled={loading}>
+              {loading ? "Submitting..." : "Confirm"}
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function StepDot({ n, current, label }: { n: 1|2|3; current: number; label: string }) {
+  const active = current === n;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div style={{
+        width: 28, height: 28, borderRadius: "50%",
+        display: "grid", placeItems: "center",
+        background: active ? "#0b1b33" : "#d9dfe7",
+        color: active ? "#fff" : "#333",
+        fontWeight: 700,
+      }}>{n}</div>
+      <span>{label}</span>
+    </div>
+  );
+}
+

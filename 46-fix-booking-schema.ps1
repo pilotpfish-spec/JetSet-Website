@@ -1,3 +1,8 @@
+Write-Host "🛠 Step 1: Backup schema.prisma..."
+Copy-Item "prisma\schema.prisma" "prisma\schema.booking.bak" -Force
+
+Write-Host "📝 Step 2: Overwrite schema.prisma with corrected Booking + User relation..."
+@'
 generator client {
   provider = "prisma-client-js"
 }
@@ -68,3 +73,9 @@ model Booking {
 
   user User? @relation(fields: [userId], references: [id])
 }
+'@ | Out-File -Encoding UTF8 "prisma\schema.prisma"
+
+Write-Host "⚡ Step 3: Run Prisma migration..."
+npx prisma migrate dev --name fix-booking-relation --skip-seed
+
+Write-Host "✅ Booking schema fixed!"

@@ -1,0 +1,39 @@
+export type RideMode = "toAirport" | "fromAirport" | "nonAirport";
+
+export interface FareInput {
+  mode: RideMode;
+  distanceMiles: number;   // computed from origin/destination
+  durationMinutes: number; // computed from routing API
+  pickupAt?: string;       // ISO (for surcharges/windows if you add later)
+}
+
+const BASE_FLAG = 7.5;           // base/dispatch
+const PER_MILE = 2.85;           // mileage
+const PER_MIN = 0.45;            // time
+const AIRPORT_SURCHARGE = 8.0;   // applies to exactly one airport leg
+const MIN_FARE = 35;             // floor
+
+/**
+ * Correct application of airport surcharge:
+ * - toAirport: add once
+ * - fromAirport: add once
+ * - nonAirport: never add
+ */
+export function calculateFare(input: FareInput): number {
+  const miles = Math.max(0, input.distanceMiles || 0);
+  const mins  = Math.max(0, input.durationMinutes || 0);
+
+  let fare = BASE_FLAG + (miles * PER_MILE) + (mins * PER_MIN);
+
+  if (input.mode === "toAirport" || input.mode === "fromAirport") {
+    fare += AIRPORT_SURCHARGE;
+  }
+
+  // absolutely never double-charge the airport leg
+  // (no additional add-ons here)
+
+  if (fare < MIN_FARE) fare = MIN_FARE;
+
+  // round to 2 decimals for display/quote
+  return Math.round(fare * 100) / 100;
+}

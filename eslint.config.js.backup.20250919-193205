@@ -1,0 +1,5 @@
+export default [
+  { ignores: ["**/recovery/**"] },
+  // Ignore backup and stash locations
+  { ignores: ["**/*.bak", "**/*.backup.*", "**/backup_stash/**", "C:/_website_stash/**"] },
+];

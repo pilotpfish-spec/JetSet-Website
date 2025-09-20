@@ -1,0 +1,51 @@
+import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+import mailgun from "mailgun-js";
+
+const prisma = new PrismaClient();
+
+export async function POST(req: Request) {
+  try {
+    const { pickup, dropoff, rideType } = await req.json();
+
+    if (!pickup || !dropoff || !rideType) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // Fare logic
+    let fare = 0;
+    if (rideType === "to-airport") {
+      fare = 45;
+    } else if (rideType === "from-airport") {
+      fare = 55;
+    } else {
+      fare = 35;
+    }
+
+    const booking = await prisma.booking.create({
+      data: { pickup, dropoff, rideType, fare },
+    });
+
+    // Mailgun
+    const mg = mailgun({
+      apiKey: process.env.MAILGUN_API_KEY!,
+      domain: process.env.MAILGUN_DOMAIN!,
+    });
+
+    await mg.messages().send({
+      from: "JetSet Direct <no-reply@jetsetdirect.com>",
+      to: "pilotpfish@gmail.com",
+      subject: "🚖 New Booking",
+      text: `Booking ID: ${booking.id}
+Pickup: ${pickup}
+Dropoff: ${dropoff}
+Type: ${rideType}
+Fare: $${fare}`,
+    });
+
+    return NextResponse.json({ success: true, booking });
+  } catch (error) {
+    console.error("Booking error:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}

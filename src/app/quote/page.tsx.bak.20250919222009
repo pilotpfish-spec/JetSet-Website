@@ -1,0 +1,303 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import Script from "next/script";
+import { useSession, signIn, signOut } from "next-auth/react";
+
+type Airport = { code: string; name: string; city: string; state: string };
+
+const AIRPORTS: Airport[] = [
+  // DFW metro + common regionals (~5h)
+  { code: "DFW", name: "Dallas/Fort Worth International", city: "Dallas–Fort Worth", state: "TX" },
+  { code: "DAL", name: "Dallas Love Field", city: "Dallas", state: "TX" },
+  { code: "AFW", name: "Fort Worth Alliance (AFW)", city: "Fort Worth", state: "TX" },
+  { code: "FTW", name: "Meacham International (FTW)", city: "Fort Worth", state: "TX" },
+  { code: "RBD", name: "Dallas Executive (RBD)", city: "Dallas", state: "TX" },
+  { code: "ADS", name: "Addison (ADS)", city: "Addison", state: "TX" },
+  { code: "DTO", name: "Denton Enterprise (DTO)", city: "Denton", state: "TX" },
+  { code: "GKY", name: "Arlington Municipal (GKY)", city: "Arlington", state: "TX" },
+  { code: "GPM", name: "Grand Prairie Municipal (GPM)", city: "Grand Prairie", state: "TX" },
+  { code: "ACT", name: "Waco Regional", city: "Waco", state: "TX" },
+  { code: "TYR", name: "Tyler Pounds Regional", city: "Tyler", state: "TX" },
+  { code: "GGG", name: "East Texas Regional", city: "Longview", state: "TX" },
+  { code: "SPS", name: "Wichita Falls Regional", city: "Wichita Falls", state: "TX" },
+  { code: "ABI", name: "Abilene Regional", city: "Abilene", state: "TX" },
+  { code: "SJT", name: "San Angelo Regional (Mathis Field)", city: "San Angelo", state: "TX" },
+  { code: "AUS", name: "Austin–Bergstrom International", city: "Austin", state: "TX" },
+  { code: "SAT", name: "San Antonio International", city: "San Antonio", state: "TX" },
+  { code: "IAH", name: "George Bush Intercontinental", city: "Houston", state: "TX" },
+  { code: "HOU", name: "William P. Hobby", city: "Houston", state: "TX" },
+  { code: "CLL", name: "Easterwood Field", city: "College Station", state: "TX" },
+  { code: "GRK", name: "Killeen–Fort Cavazos Regional", city: "Killeen", state: "TX" },
+  { code: "LBB", name: "Lubbock Preston Smith International", city: "Lubbock", state: "TX" },
+  { code: "MAF", name: "Midland International Air & Space Port", city: "Midland", state: "TX" },
+  { code: "OKC", name: "Will Rogers World", city: "Oklahoma City", state: "OK" },
+  { code: "LAW", name: "Lawton–Fort Sill Regional", city: "Lawton", state: "OK" },
+  { code: "TUL", name: "Tulsa International", city: "Tulsa", state: "OK" },
+  { code: "SHV", name: "Shreveport Regional", city: "Shreveport", state: "LA" },
+];
+
+const DEFAULT_AIRPORT_CODE = "DFW";
+const GOOGLE_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+declare global {
+  interface Window { google: any }
+}
+
+type Mode = "TO_AIRPORT" | "FROM_AIRPORT";
+
+export default function QuotePage() {
+  const { data: session } = useSession();
+  const [mode, setMode] = useState<Mode>("TO_AIRPORT");
+  const [airportCode, setAirportCode] = useState<string>(DEFAULT_AIRPORT_CODE);
+
+  const airport = useMemo(
+    () => AIRPORTS.find(a => a.code === airportCode) ?? AIRPORTS[0],
+    [airportCode]
+  );
+
+  const [pickup, setPickup] = useState("");
+  const [dropoff, setDropoff] = useState("");
+  const [when, setWhen] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  // fare view
+  const [quote, setQuote] = useState<any | null>(null);
+
+  // Google Places Autocomplete
+  const pickupRef = useRef<HTMLInputElement>(null);
+  const dropoffRef = useRef<HTMLInputElement>(null);
+
+  const initPlaces = () => {
+    if (!window?.google?.maps?.places) return;
+    try {
+      if (pickupRef.current) {
+        const ap = new window.google.maps.places.Autocomplete(pickupRef.current, { fields: ["formatted_address", "name", "geometry"] });
+        ap.addListener("place_changed", () => {
+          const p = ap.getPlace();
+          const val = p?.formatted_address || p?.name || pickupRef.current?.value || "";
+          setPickup(val);
+        });
+      }
+      if (dropoffRef.current) {
+        const ap = new window.google.maps.places.Autocomplete(dropoffRef.current, { fields: ["formatted_address", "name", "geometry"] });
+        ap.addListener("place_changed", () => {
+          const p = ap.getPlace();
+          const val = p?.formatted_address || p?.name || dropoffRef.current?.value || "";
+          setDropoff(val);
+        });
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.google?.maps?.places) initPlaces();
+  }, [mode]);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true); setMsg(null); setErr(null); setQuote(null);
+
+    // Your API schema: { mode, airportCode, origin, dest, p2pWaitMinutes? }
+    const origin = mode === "TO_AIRPORT" ? pickup : `${airport.code} — ${airport.name} (${airport.city}, ${airport.state})`;
+    const dest   = mode === "TO_AIRPORT" ? `${airport.code} — ${airport.name} (${airport.city}, ${airport.state})` : dropoff;
+
+    try {
+      const res = await fetch("/api/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode, airportCode, origin, dest }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Failed to get quote");
+
+      setQuote(data);
+      setMsg(data?.message || "Quote ready.");
+    } catch (e: any) {
+      setErr(e?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section style={{ maxWidth: 780, margin: "0 auto" }}>
+      {/* Auth control (uses your existing NextAuth) */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <h1 style={{ margin: 0 }}>Request a Quote</h1>
+        <div>
+          {session?.user ? (
+            <button onClick={() => signOut()} style={{ padding: "8px 12px", borderRadius: 999, border: "1px solid #0b1b33" }}>
+              Sign out {session.user.name ?? ""}
+            </button>
+          ) : (
+            <button onClick={() => signIn()} style={{ padding: "8px 12px", borderRadius: 999, border: "1px solid #0b1b33" }}>
+              Sign in
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Load Google Places if key present */}
+      {GOOGLE_KEY ? (
+        <Script
+          src={`https://maps.googleapis.com/maps/api/js?key=${GOOGLE_KEY}&libraries=places`}
+          strategy="afterInteractive"
+          onLoad={initPlaces}
+        />
+      ) : null}
+
+      {/* Direction + airport */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        <button
+          type="button"
+          onClick={() => setMode("TO_AIRPORT")}
+          aria-pressed={mode === "TO_AIRPORT"}
+          style={{
+            padding: "8px 12px",
+            borderRadius: 999,
+            border: "1px solid #0b1b33",
+            background: mode === "TO_AIRPORT" ? "#0b1b33" : "#fff",
+            color: mode === "TO_AIRPORT" ? "#fff" : "#0b1b33",
+            fontWeight: 700,
+          }}
+        >
+          To Airport
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("FROM_AIRPORT")}
+          aria-pressed={mode === "FROM_AIRPORT"}
+          style={{
+            padding: "8px 12px",
+            borderRadius: 999,
+            border: "1px solid #0b1b33",
+            background: mode === "FROM_AIRPORT" ? "#0b1b33" : "#fff",
+            color: mode === "FROM_AIRPORT" ? "#fff" : "#0b1b33",
+            fontWeight: 700,
+          }}
+        >
+          From Airport
+        </button>
+
+        <label style={{ marginLeft: "auto" }}>
+          Airport{" "}
+          <select
+            value={airportCode}
+            onChange={(e) => setAirportCode(e.target.value)}
+            required
+            style={{ padding: 8, minWidth: 260 }}
+          >
+            {AIRPORTS.map(a => (
+              <option key={a.code} value={a.code}>
+                {a.code} — {a.name} ({a.city}, {a.state})
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
+        {mode === "TO_AIRPORT" ? (
+          <label>
+            Pickup
+            <input
+              ref={pickupRef}
+              value={pickup}
+              onChange={(e) => setPickup(e.target.value)}
+              required
+              placeholder="Address or location"
+              style={{ width: "100%", padding: 8 }}
+            />
+          </label>
+        ) : (
+          <label>
+            Dropoff
+            <input
+              ref={dropoffRef}
+              value={dropoff}
+              onChange={(e) => setDropoff(e.target.value)}
+              required
+              placeholder="Address or location"
+              style={{ width: "100%", padding: 8 }}
+            />
+          </label>
+        )}
+
+        <label>
+          When
+          <input
+            type="datetime-local"
+            value={when}
+            onChange={(e) => setWhen(e.target.value)}
+            required
+            style={{ width: "100%", padding: 8 }}
+          />
+        </label>
+
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            padding: "10px 16px",
+            borderRadius: 999,
+            fontWeight: 700,
+            background: "#fff",
+            color: "#0b1b33",
+            border: "1px solid #0b1b33",
+          }}
+        >
+          {loading ? "Submitting..." : (mode === "TO_AIRPORT" ? "Quote to Airport" : "Quote from Airport")}
+        </button>
+
+        {/* Messages */}
+        {msg && <p style={{ color: "green" }}>{msg}</p>}
+        {err && <p style={{ color: "crimson" }}>{err}</p>}
+      </form>
+
+      {/* Fare details if your API returns them */}
+      {quote && (
+        <div style={{ marginTop: 18, border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
+          <h3 style={{ marginTop: 0 }}>Fare details</h3>
+          <div style={{ display: "grid", gap: 6 }}>
+            {"total" in quote && <div><strong>Total:</strong> {quote.total}</div>}
+            {"estimate" in quote && <div><strong>Estimate:</strong> {quote.estimate}</div>}
+            {"currency" in quote && <div><strong>Currency:</strong> {quote.currency}</div>}
+            {"distance" in quote && <div><strong>Distance:</strong> {quote.distance}</div>}
+            {"duration" in quote && <div><strong>Duration:</strong> {quote.duration}</div>}
+            {"breakdown" in quote && typeof quote.breakdown === "object" && (
+              <details>
+                <summary>Breakdown</summary>
+                <pre style={{ whiteSpace: "pre-wrap" }}>{JSON.stringify(quote.breakdown, null, 2)}</pre>
+              </details>
+            )}
+          </div>
+
+          <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {session?.user ? (
+              <a href="/booking" style={{ padding: "10px 14px", borderRadius: 999, fontWeight: 700, background: "#0b1b33", color: "#fff", textDecoration: "none" }}>
+                Continue to booking
+              </a>
+            ) : (
+              <button onClick={() => signIn()} style={{ padding: "10px 14px", borderRadius: 999, fontWeight: 700, border: "1px solid #0b1b33", background: "#fff", color: "#0b1b33" }}>
+                Sign in to book
+              </button>
+            )}
+          </div>
+
+          {/* Always show raw payload for debugging unknown shapes */}
+          <details style={{ marginTop: 12 }}>
+            <summary>Raw response</summary>
+            <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>{JSON.stringify(quote, null, 2)}</pre>
+          </details>
+        </div>
+      )}
+
+      <p style={{ marginTop: 16 }}>
+        Prefer to book now? <a href="/booking">Go to Booking</a>
+      </p>
+    </section>
+  );
+}
