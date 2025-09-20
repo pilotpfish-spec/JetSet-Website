@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import * as ui from "./ui.css.ts";
+import * as ui from "./ui.css";
 
 export default function SiteShell({ children }: { children: ReactNode }) {
   return (
