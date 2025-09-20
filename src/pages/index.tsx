@@ -1,26 +1,27 @@
 import Link from "next/link";
+import * as ui from "../components/ui.css";
 
 export default function Home() {
   return (
-    <div className="space-y-10">
-      <section className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 px-6 py-12 text-white">
-        <h1 className="text-3xl font-bold">Private Car Service · On-time Airport Transfers</h1>
-        <p className="mt-3 text-slate-300">Transparent pricing, pro drivers, and seamless booking.</p>
-        <div className="mt-6 flex gap-3">
-          <Link href="/booking" className="rounded-xl bg-white px-5 py-2 text-slate-900 font-medium">Get Quote</Link>
-          <Link href="/booking" className="rounded-xl border border-white/30 px-5 py-2">Book Now</Link>
+    <div style={{display:"grid", gap:24}}>
+      <section className={ui.card} style={{background:"#0f172a", color:"#fff"}}>
+        <h1 style={{fontSize:"28px", marginBottom:8}}>Private Car Service · On-time Airport Transfers</h1>
+        <p style={{opacity:.9}}>Transparent pricing, pro drivers, and seamless booking.</p>
+        <div style={{display:"flex", gap:12, marginTop:16}}>
+          <Link href="/booking" className={ui.buttonPrimary} style={{textDecoration:"none"}}>Get Quote</Link>
+          <Link href="/booking" className={ui.buttonSecondary} style={{textDecoration:"none"}}>Book Now</Link>
         </div>
       </section>
 
-      <section className="grid gap-6 md:grid-cols-3">
+      <section className={ui.grid2}>
         {[
           ["On-Time Pickup","We track flights & traffic."],
           ["Transparent Pricing","No surprises. Tip optional."],
           ["Pro Vehicles","Sedans, SUVs, and vans."],
         ].map(([t,s]) => (
-          <div key={t} className="rounded-2xl border p-6">
-            <div className="text-lg font-semibold">{t}</div>
-            <div className="mt-1 text-slate-600">{s}</div>
+          <div key={t} className={ui.card}>
+            <div style={{fontWeight:600}}>{t}</div>
+            <div style={{color:"#475569", marginTop:6}}>{s}</div>
           </div>
         ))}
       </section>

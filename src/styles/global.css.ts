@@ -1,55 +1,15 @@
-import { style, globalStyle } from "@vanilla-extract/css";
+import { globalStyle } from "@vanilla-extract/css";
+import { vars } from "./theme.css";
 
-// Brand colors
-export const colors = {
-  navy: "#0a192f",
-  yellow: "#facc15",
-  white: "#ffffff",
-  gray: "#9ca3af",
-};
-
-// CTA Button
-export const ctaButton = style({
-  backgroundColor: colors.yellow,
-  color: colors.navy,
-  fontWeight: "bold",
-  padding: "1rem 2rem",
-  borderRadius: "0.5rem",
-  boxShadow: "0 4px 6px rgba(0,0,0,0.2)",
-  transition: "all 0.2s ease-in-out",
-  selectors: {
-    "&:hover": {
-      backgroundColor: "#fde047",
-      transform: "scale(1.05)",
-    },
-  },
-});
-
-// Nav Link
-export const navLink = style({
-  position: "relative",
-  color: colors.white,
-  fontWeight: "500",
-  transition: "color 0.2s ease-in-out",
-  selectors: {
-    "&:hover": { color: colors.yellow },
-  },
-});
-
-// Footer Link
-export const footerLink = style({
-  color: colors.gray,
-  fontSize: "0.9rem",
-  transition: "color 0.2s ease-in-out",
-  selectors: {
-    "&:hover": { color: colors.yellow },
-  },
-});
-
-// Global base styles
+globalStyle("html,body,#__next", { height: "100%" });
 globalStyle("body", {
   margin: 0,
-  fontFamily: "system-ui, sans-serif",
-  backgroundColor: colors.navy,
-  color: colors.white,
+  background: vars.color.bg,
+  color: vars.color.text,
+  fontFamily: vars.font.body
 });
+globalStyle("a", { color: vars.color.link, textDecoration: "none" });
+globalStyle("a:hover", { textDecoration: "underline" });
+globalStyle("h1", { fontSize: "2rem", lineHeight: "1.2", margin: "0 0 8px" });
+globalStyle("h2", { fontSize: "1.5rem", lineHeight: "1.25", margin: "24px 0 8px" });
+globalStyle("input,select,button,textarea", { fontFamily: vars.font.body, fontSize: "1rem" });

@@ -1,12 +1,11 @@
 import * as React from "react";
+import * as ui from "./ui.css";
 import GooglePlacesInput from "./GooglePlacesInput";
 
 type Mode = "TO_AIRPORT" | "FROM_AIRPORT" | "POINT_TO_POINT";
 
 export default function BookingWizard() {
   const [step, setStep] = React.useState<1|2|3>(1);
-
-  // Step 1 data
   const [pickup, setPickup] = React.useState("");
   const [dropoff, setDropoff] = React.useState("");
   const [mode, setMode] = React.useState<Mode>("TO_AIRPORT");
@@ -14,12 +13,10 @@ export default function BookingWizard() {
   const [pax, setPax] = React.useState<number>(2);
   const [vehicle, setVehicle] = React.useState<string>("SEDAN");
 
-  // Step 2 data (quote)
   const [quote, setQuote] = React.useState<any>(null);
   const [quoting, setQuoting] = React.useState(false);
   const [quoteErr, setQuoteErr] = React.useState<string | null>(null);
 
-  // Step 3 data (contact + book)
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [phone, setPhone] = React.useState("");
@@ -33,14 +30,7 @@ export default function BookingWizard() {
       const res = await fetch("/api/quote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          pickup,
-          dropoff,
-          mode,
-          pax,
-          vehicle,
-          when: pickupAt || null
-        }),
+        body: JSON.stringify({ pickup, dropoff, mode, pax, vehicle, when: pickupAt || null }),
       });
       if (!res.ok) throw new Error(`Quote failed (${res.status})`);
       const data = await res.json();
@@ -76,7 +66,6 @@ export default function BookingWizard() {
         }),
       });
       if (!res.ok) throw new Error(`Booking failed (${res.status})`);
-      // Optional: parse response for booking id
       window.location.href = "/Success";
     } catch (e: any) {
       setBookErr(e.message || "Could not complete booking.");
@@ -85,174 +74,130 @@ export default function BookingWizard() {
     }
   }
 
-  const canStep1 = pickup && (mode !== "TO_AIRPORT" ? dropoff : true) && pax > 0;
+  const canStep1 = pickup && (mode !== "TO_AIRPORT" ? !!dropoff : true) && pax > 0;
 
   return (
-    <div className="space-y-8">
-      <ol className="flex flex-wrap items-center gap-3 text-sm">
-        <li className={`rounded-full px-3 py-1 ${step>=1?"bg-slate-900 text-white":"bg-slate-100"}`}>1 · Trip</li>
-        <li className={`rounded-full px-3 py-1 ${step>=2?"bg-slate-900 text-white":"bg-slate-100"}`}>2 · Quote</li>
-        <li className={`rounded-full px-3 py-1 ${step>=3?"bg-slate-900 text-white":"bg-slate-100"}`}>3 · Book</li>
+    <div style={{display:"grid", gap:24}}>
+      <ol style={{display:"flex", gap:8, flexWrap:"wrap"}}>
+        <li className={step>=1?ui.stepPillActive:ui.stepPill}>1 · Trip</li>
+        <li className={step>=2?ui.stepPillActive:ui.stepPill}>2 · Quote</li>
+        <li className={step>=3?ui.stepPillActive:ui.stepPill}>3 · Book</li>
       </ol>
 
       {step === 1 && (
-        <section className="grid gap-6 md:grid-cols-2">
-          <div className="space-y-4">
-            <label className="block text-sm font-medium">
+        <section className={ui.grid2}>
+          <div style={{display:"grid", gap:16}}>
+            <label style={{fontSize:14, fontWeight:500}}>
               Pickup
-              <GooglePlacesInput
-                value={pickup}
-                onChange={setPickup}
-                placeholder="Start address"
-                required
-              />
+              <GooglePlacesInput value={pickup} onChange={setPickup} placeholder="Start address" className={ui.input}/>
             </label>
 
             {mode !== "TO_AIRPORT" && (
-              <label className="block text-sm font-medium">
+              <label style={{fontSize:14, fontWeight:500}}>
                 Dropoff
-                <GooglePlacesInput
-                  value={dropoff}
-                  onChange={setDropoff}
-                  placeholder="Destination address"
-                  required
-                />
+                <GooglePlacesInput value={dropoff} onChange={setDropoff} placeholder="Destination address" className={ui.input}/>
               </label>
             )}
 
-            <label className="block text-sm font-medium">
-              Date & Time
-              <input
-                type="datetime-local"
-                className="mt-1 w-full rounded-xl border px-3 py-2"
-                value={pickupAt}
-                onChange={(e)=>setPickupAt(e.target.value)}
-              />
+            <label style={{fontSize:14, fontWeight:500}}>
+              Date &amp; Time
+              <input type="datetime-local" className={ui.input} value={pickupAt} onChange={(e)=>setPickupAt(e.target.value)} />
             </label>
           </div>
 
-          <div className="space-y-4">
-            <fieldset className="space-y-2">
-              <legend className="text-sm font-medium">Trip Type</legend>
-              <div className="flex gap-3">
+          <div className={ui.card} style={{display:"grid", gap:12}}>
+            <fieldset style={{display:"grid", gap:8, border:"0", padding:"0"}}>
+              <legend style={{fontSize:14, fontWeight:600, marginBottom:4}}>Trip Type</legend>
+              <div style={{display:"flex", gap:12}}>
                 {(["TO_AIRPORT","FROM_AIRPORT","POINT_TO_POINT"] as const).map(m => (
-                  <label key={m} className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="mode"
-                      value={m}
-                      checked={mode===m}
-                      onChange={()=>setMode(m)}
-                    />
+                  <label key={m} style={{display:"flex", alignItems:"center", gap:6}}>
+                    <input type="radio" name="mode" value={m} checked={mode===m} onChange={()=>setMode(m)} />
                     <span>{m.replaceAll("_"," ").toLowerCase()}</span>
                   </label>
                 ))}
               </div>
             </fieldset>
 
-            <label className="block text-sm font-medium">
+            <label style={{fontSize:14, fontWeight:500}}>
               Passengers
-              <input
-                type="number"
-                min={1}
-                max={10}
-                className="mt-1 w-full rounded-xl border px-3 py-2"
-                value={pax}
-                onChange={(e)=>setPax(Number(e.target.value || 1))}
-              />
+              <input type="number" min={1} max={10} className={ui.input} value={pax} onChange={(e)=>setPax(Number(e.target.value || 1))} />
             </label>
 
-            <label className="block text-sm font-medium">
+            <label style={{fontSize:14, fontWeight:500}}>
               Vehicle
-              <select
-                className="mt-1 w-full rounded-xl border px-3 py-2"
-                value={vehicle}
-                onChange={(e)=>setVehicle(e.target.value)}
-              >
+              <select className={ui.select} value={vehicle} onChange={(e)=>setVehicle(e.target.value)}>
                 <option value="SEDAN">Sedan (1–3)</option>
                 <option value="SUV">SUV (1–6)</option>
                 <option value="VAN">Van (1–10)</option>
               </select>
             </label>
 
-            <button
-              className="mt-4 w-full rounded-xl bg-slate-900 px-4 py-2 text-white disabled:opacity-50"
-              disabled={!canStep1 || quoting}
-              onClick={getQuote}
-            >
+            <button className={ui.buttonPrimary} disabled={!canStep1 || quoting} onClick={getQuote}>
               {quoting ? "Getting quote…" : "Get Quote"}
             </button>
-
-            {quoteErr && <p className="text-sm text-red-600">{quoteErr}</p>}
+            {quoteErr && <p style={{color:"#dc2626", fontSize:14}}>{quoteErr}</p>}
           </div>
         </section>
       )}
 
       {step === 2 && (
-        <section className="space-y-4">
-          <h3 className="text-lg font-semibold">Your Quote</h3>
-          <div className="rounded-xl border p-4">
-            <div className="flex items-baseline justify-between">
-              <div>
-                <div className="text-sm text-slate-600">{mode.replaceAll("_"," ")}</div>
-                <div className="font-medium">{pickup}</div>
-                {dropoff && <div className="font-medium">→ {dropoff}</div>}
-                {pickupAt && <div className="text-sm text-slate-500 mt-1">{new Date(pickupAt).toLocaleString()}</div>}
-              </div>
-              <div className="text-2xl font-bold">${Number(quote?.total ?? 0).toFixed(2)}</div>
+        <section className={ui.card} style={{display:"grid", gap:16}}>
+          <h3 style={{fontSize:18, fontWeight:600}}>Your Quote</h3>
+          <div style={{display:"flex", justifyContent:"space-between", alignItems:"baseline"}}>
+            <div>
+              <div style={{fontSize:14, color:"#475569"}}>{mode.replaceAll("_"," ")}</div>
+              <div style={{fontWeight:600}}>{pickup}</div>
+              {dropoff && <div style={{fontWeight:600}}>→ {dropoff}</div>}
+              {pickupAt && <div style={{fontSize:13, color:"#64748b", marginTop:4}}>{new Date(pickupAt).toLocaleString()}</div>}
             </div>
-            {quote?.breakdown && (
-              <ul className="mt-3 text-sm text-slate-600 list-disc pl-5">
-                {Object.entries(quote.breakdown).map(([k,v]) => (
-                  <li key={k}>{k}: ${Number(v as any).toFixed(2)}</li>
-                ))}
-              </ul>
-            )}
+            <div style={{fontSize:24, fontWeight:700}}>${Number(quote?.total ?? 0).toFixed(2)}</div>
           </div>
-
-          <div className="flex gap-3">
-            <button className="rounded-xl border px-4 py-2" onClick={()=>setStep(1)}>Back</button>
-            <button className="rounded-xl bg-slate-900 px-4 py-2 text-white" onClick={()=>setStep(3)}>Continue to Book</button>
+          {quote?.breakdown && (
+            <ul style={{margin:0, paddingLeft:18, color:"#475569", fontSize:14}}>
+              {Object.entries(quote.breakdown).map(([k,v]) => (
+                <li key={k}>{k}: ${Number(v as any).toFixed(2)}</li>
+              ))}
+            </ul>
+          )}
+          <div style={{display:"flex", gap:12}}>
+            <button className={ui.buttonSecondary} onClick={()=>setStep(1)}>Back</button>
+            <button className={ui.buttonPrimary} onClick={()=>setStep(3)}>Continue to Book</button>
           </div>
         </section>
       )}
 
       {step === 3 && (
-        <section className="grid gap-6 md:grid-cols-2">
-          <div className="space-y-4">
-            <label className="block text-sm font-medium">
+        <section className={ui.grid2}>
+          <div style={{display:"grid", gap:16}}>
+            <label style={{fontSize:14, fontWeight:500}}>
               Full Name
-              <input className="mt-1 w-full rounded-xl border px-3 py-2" value={name} onChange={(e)=>setName(e.target.value)} />
+              <input className={ui.input} value={name} onChange={(e)=>setName(e.target.value)} />
             </label>
-            <label className="block text-sm font-medium">
+            <label style={{fontSize:14, fontWeight:500}}>
               Email
-              <input className="mt-1 w-full rounded-xl border px-3 py-2" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} />
+              <input className={ui.input} type="email" value={email} onChange={(e)=>setEmail(e.target.value)} />
             </label>
-            <label className="block text-sm font-medium">
+            <label style={{fontSize:14, fontWeight:500}}>
               Phone
-              <input className="mt-1 w-full rounded-xl border px-3 py-2" value={phone} onChange={(e)=>setPhone(e.target.value)} />
+              <input className={ui.input} value={phone} onChange={(e)=>setPhone(e.target.value)} />
             </label>
           </div>
 
-          <div className="space-y-4">
-            <div className="rounded-xl border p-4">
-              <div className="flex items-baseline justify-between">
-                <div className="text-sm text-slate-600">Total</div>
-                <div className="text-2xl font-bold">${Number(quote?.total ?? 0).toFixed(2)}</div>
-              </div>
-              <p className="mt-2 text-sm text-slate-600">
-                You can log in later for faster checkout; for now we’ll book this as a guest.
-              </p>
+          <div className={ui.card} style={{display:"grid", gap:12}}>
+            <div style={{display:"flex", justifyContent:"space-between", alignItems:"baseline"}}>
+              <div style={{fontSize:14, color:"#475569"}}>Total</div>
+              <div style={{fontSize:24, fontWeight:700}}>${Number(quote?.total ?? 0).toFixed(2)}</div>
             </div>
-
-            <div className="flex gap-3">
-              <button className="rounded-xl border px-4 py-2" onClick={()=>setStep(2)}>Back</button>
-              <button className="rounded-xl bg-slate-900 px-4 py-2 text-white disabled:opacity-50" disabled={booking} onClick={bookNow}>
+            <p style={{fontSize:14, color:"#475569"}}>
+              You can log in later for faster checkout; for now we’ll book this as a guest.
+            </p>
+            <div style={{display:"flex", gap:12}}>
+              <button className={ui.buttonSecondary} onClick={()=>setStep(2)}>Back</button>
+              <button className={ui.buttonPrimary} disabled={booking} onClick={bookNow}>
                 {booking ? "Booking…" : "Book Now"}
               </button>
             </div>
-
-            {bookErr && <p className="text-sm text-red-600">{bookErr}</p>}
+            {bookErr && <p style={{color:"#dc2626", fontSize:14}}>{bookErr}</p>}
           </div>
         </section>
       )}
