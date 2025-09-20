@@ -42,23 +42,3 @@ export const ctaButton = style({
     "&:disabled": { opacity: 0.6, cursor: "not-allowed" },
   },
 });
-
-/* ---- added by script: navLink/footerLink for layout.tsx ---- */
-export const navLink = style({
-  color: "#ffffff",
-  fontWeight: 600,
-  textDecoration: "none",
-  selectors: {
-    "&:hover": { opacity: 0.85 },
-    "&:focus-visible": { outline: "none", boxShadow: `0 0 0 3px ${colors.ring}` },
-  },
-});
-
-export const footerLink = style({
-  color: "rgba(255,255,255,0.85)",
-  textDecoration: "none",
-  selectors: {
-    "&:hover": { opacity: 0.8, textDecoration: "underline" },
-    "&:focus-visible": { outline: "none", boxShadow: `0 0 0 3px ${colors.ring}` },
-  },
-});
