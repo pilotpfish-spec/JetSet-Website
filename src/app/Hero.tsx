@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ctaButton } from "@/styles/global.css";
+import { ctaButton } from "@/styles/global.css.ts";
 
 export default function Hero() {
   const [heroImage, setHeroImage] = useState<string>("");

@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import Hero from "./Hero";
-import { navLink, footerLink } from "@/styles/global.css";
+import { navLink, footerLink } from "@/styles/global.css.ts";
 export const metadata = {
   title: "JetSet Direct",
   description: "Ground Service Elevated. The Reason We’re Taking Off.",

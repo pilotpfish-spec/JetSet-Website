@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { container, hero, heroTitle, heroSub, heroActions, features, featureCard, outlineButton } from "../styles/ui.css";
-import { ctaButton } from "../styles/global.css";
+import { container, hero, heroTitle, heroSub, heroActions, features, featureCard, outlineButton } from "../styles/ui.css.ts";
+import { ctaButton } from "../styles/global.css.ts";
 
 export default function Home() {
   return (

@@ -1,7 +1,7 @@
 import * as React from "react";
-import { ctaButton } from "../../styles/global.css";
+import { ctaButton } from "../../styles/global.css.ts";
 import { outlineButton, container, steps, step, stepActive, twoCol, card,
-  label, input, select, rowActions, bigTotal } from "../../styles/ui.css";
+  label, input, select, rowActions, bigTotal } from "../../styles/ui.css.ts";
 import dynamic from "next/dynamic";
 
 const GooglePlacesInput = dynamic(() => import("../../components/GooglePlacesInput"), { ssr: false });

@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as ui from "./ui.css";
+import * as ui from "./ui.css.ts";
 import GooglePlacesInput from "./GooglePlacesInput";
 
 type Mode = "TO_AIRPORT" | "FROM_AIRPORT" | "POINT_TO_POINT";
