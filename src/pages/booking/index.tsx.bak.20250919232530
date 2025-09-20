@@ -1,0 +1,11 @@
+import dynamic from "next/dynamic";
+const BookingWizard = dynamic(()=>import("../../components/BookingWizard"), { ssr: false });
+
+export default function BookingPage() {
+  return (
+    <div>
+      <h1 className="mb-6 text-2xl font-semibold">Book your ride</h1>
+      <BookingWizard />
+    </div>
+  );
+}

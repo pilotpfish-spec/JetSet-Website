@@ -1,69 +1,56 @@
-import type { User } from "next-auth";
-import type { JWT } from "next-auth/jwt";
-import type { Session } from "next-auth";
-import NextAuth from "next-auth"
-import CredentialsProvider from "next-auth/providers/credentials"
-import { PrismaAdapter } from "@next-auth/prisma-adapter"
-import { PrismaClient } from "@prisma/client"
-import bcrypt from "bcrypt"
+import NextAuth, { type NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient()
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
-export const authOptions = {
-  callbacks: {
-    async jwt({ token, user }: { token: JWT; user?: { id: string } }) {
-      if (user) {
-        token.id = (user as { id: string }).id;
-      }
-      return token;
-    },
-    async session({ session, token }: { session: Session; token: JWT }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-      }
-      return session;
-    }
-  },
-  adapter: PrismaAdapter(prisma),
+export const authOptions: NextAuthOptions = {
+  session: { strategy: "jwt" },
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" }
+        email:    { label: "Email",    type: "text" },
+        password: { label: "Password", type: "password" },
       },
-      async authorize(credentials): Promise<User | null> {
-        if (!credentials?.email || !credentials?.password) return null
+      async authorize(credentials) {
+        const email = (credentials?.email ?? "").toString().trim().toLowerCase();
+        const password = (credentials?.password ?? "").toString();
+        if (!email || !password) return null;
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        })
-        if (!user) return null
-        const pwd = typeof credentials?.password === "string" ? credentials.password : "";
-const hash = user?.hashedPassword ?? "";
-if (!pwd || !hash) return null;
-const isValid = await bcrypt.compare(pwd, hash);return isValid ? { id: String(user.id), email: user.email, name: user.name ?? null } : null
-      }
-    })
+          where: { email },
+          select: { id: true, email: true, name: true, hashedPassword: true },
+        });
+
+        const hash = user?.hashedPassword ?? null;
+        if (!user?.email || !hash) return null;
+
+        const ok = await bcrypt.compare(password, hash);
+        if (!ok) return null;
+
+        // Explicit shape NextAuth expects. Email asserted to string for TS.
+        return { id: String(user.id), email: user.email as string, name: user.name ?? undefined };
+      },
+    }),
   ],
-  session: { strategy: "jwt" as const },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) token.id = (user as any).id;
+      return token;
+    },
+    async session({ session, token }) {
+      if (token?.id && session.user) (session.user as any).id = token.id;
+      return session;
+    },
+  },
+  pages: {
+    signIn: "/Login",
+  },
   secret: process.env.NEXTAUTH_SECRET,
-}
+};
 
-export default NextAuth(authOptions)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export default NextAuth(authOptions);
